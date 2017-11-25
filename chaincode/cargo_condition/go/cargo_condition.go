@@ -59,9 +59,7 @@ func (s *SmartContract) checkCondition(APIstub shim.ChaincodeStubInterface, args
 
 	fmt.Printf("ChainCode was triggered")
 
-	APIstub.PutState(args[0], "ChainCode was triggered")
-
-	return shim.Success(nil)
+	return shim.Success([]byte(fmt.Sprintf("ChainCode was triggered")))
 }
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
