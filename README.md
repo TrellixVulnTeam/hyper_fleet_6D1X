@@ -6,8 +6,8 @@ Before starting Blockchain:
 * docker rmi dev-peer0.org1.example.com-fabcar-1.0-5c906e402ed29f20260ae42283216aa75549c571e2e380f3615826365d8269ba
 
 
-  Run scripts to make environment:
-  * ./startFabric.sh
-  * docker logs -f ca.example.com
-  * node enrollAdmin.js
-  * node registerUser.js
+Run scripts to make environment:
+* ./startFabric.sh
+* docker logs -f ca.example.com
+* node enrollAdmin.js
+* node registerUser.js

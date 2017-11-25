@@ -10,6 +10,8 @@ exports.create_a_iotdata = function(req, res) {
   console.info('received object: ' + new_iot_data.name);
   res.json('data received! ' + new_iot_data.name);
 
+  var invokerInstance = require('../../invoker');
+  invokerInstance.push_new_iot_data_to_chaincode();
   /*
   new_iot_data.save(function(err, data) {
     if (err)
