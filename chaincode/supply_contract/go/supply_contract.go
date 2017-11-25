@@ -8,6 +8,8 @@ import (
 	//"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 )
@@ -17,7 +19,9 @@ type SmartContract struct {
 }
 
 // Define the car structure, with 4 properties.  Structure tags are used by encoding/json library
-type Cargo struct {
+type SupplyContract struct {
+	Name	 string `json:"name"`
+	Id     int64  `json:"Id"`
 	State  string `json:"state"`
 }
 
@@ -39,54 +43,60 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 	function, args := APIstub.GetFunctionAndParameters()
 	// Route to the appropriate handler function to interact with the ledger appropriately
 
-	if function == "queryCargo" {
-		return s.queryCargo(APIstub, args)
+	if function == "checkState" {
+		return s.checkState(APIstub, args)
 	} else if function == "initLedger" {
 		return s.initLedger(APIstub)
-	} else if function == "refreshCondition" {
-		return s.refreshCondition(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
 }
 
-func (s *SmartContract) refreshCondition(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) checkState(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	cargoAsBytes, _ := APIstub.GetState(args[0])
-	cargo := Cargo{}
+	// get condition of cargo
+	var response = APIstub.InvokeChaincode("cargo_condition", nil, "mychannel")
 
-	json.Unmarshal(cargoAsBytes, &cargo)
-	cargo.State = "damaged"
+	fmt.Printf("CargoCondition invoking response: %s", response.Message)
 
-	cargoAsBytes, _ = json.Marshal(cargo)
-	APIstub.PutState(args[0], cargoAsBytes)
+	var payload = string(response.Payload)
 
-	return shim.Success(cargoAsBytes)
+	if payload == "GOT_IT" {
+		return shim.Error("GOT_IT!!!!!")
+	}
+
+	return shim.Success([]byte("payload_test"))
 }
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
-	cargos := []Cargo{
-		Cargo{State: "normal"},
+	contracts := []SupplyContract{
+		SupplyContract{Name: "Codfish contract #1", Id: 42, State: "not-yet-started"},
 	}
 
-	cargoAsBytes, _ := json.Marshal(cargos[0])
-	APIstub.PutState("CARGO1", cargoAsBytes)
+	i := 0
+	for i < len(contracts) {
+		fmt.Println("i is ", i)
+		contractAsBytes, _ := json.Marshal(contracts[i])
+		APIstub.PutState("SupplyContract"+strconv.Itoa(i), contractAsBytes)
+		fmt.Println("Added", contracts[i])
+		i = i + 1
+	}
 
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) queryCargo(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) queryContract(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	cargoAsBytes, _ := APIstub.GetState(args[0])
-	return shim.Success(cargoAsBytes)
+	contractAsBytes, _ := APIstub.GetState(args[0])
+	return shim.Success(contractAsBytes)
 }
 
 // The main function is only relevant in unit test mode. Only included here for completeness.
