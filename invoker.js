@@ -4,6 +4,10 @@ var Fabric_Client = require('fabric-client');
 var path = require('path');
 var util = require('util');
 var os = require('os');
+var mongoose = require('mongoose'),
+  SupplyContract = mongoose.model('SupplyContract');
+
+
 
 exports.push_new_iot_data_to_chaincode = function(req, res) {
   var fabric_client = new Fabric_Client();
@@ -219,6 +223,48 @@ exports.get_cargo_state = function(req, res) {
   			'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", payload - %s',
   			proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload));
 
+        // create entry in DB
+        var contract_state = {"state":"ok"};
+        var new_contract = new SupplyContract(contract_state);
+
+        // if len(proposalResponses[0].response.payload) > 0 {
+        //
+        // }
+
+        var blockchain_response = JSON.parse(proposalResponses[0].response.payload);
+        var key = "state";
+        var payload = blockchain_response[key];
+
+        var payloadLenght = byteLength(payload);
+        if (payloadLenght > 0) {
+          console.log('payload = %s', payload);
+          new_contract = new SupplyContract({"state":payload});
+        }
+
+        new_contract.save(function(err, task) {
+          if (err) {
+            console.log('error while saving: %s', err);
+          }
+          else {
+            console.log('saving is ok!')
+          }
+        });
+
+        // SupplyContract.findById(0, function(err, contract) {
+        //   if (err) {
+        //     console.log('errrrr - no SupplyContract in db, so create it');
+        //
+        //     var new_contract = new SupplyContract(state: proposalResponses[0].response.payload["state"]);
+        //     new_contract.save(function(err, task) {
+        //       if (err)
+        //         console.log('errrrr - on save' + err);
+        //       console.log('okkk - on save');
+        //     });
+        //   }
+        //
+        //   console.log('okkkk');
+        // });
+
   		// build up the request for the orderer to have the transaction committed
   		var request = {
   			proposalResponses: proposalResponses,
@@ -293,4 +339,24 @@ exports.get_cargo_state = function(req, res) {
   }).catch((err) => {
   	console.error('Failed to invoke successfully :: ' + err);
   });
+}
+
+function bin2string(array){
+	var result = "";
+	for(var i = 0; i < array.length; ++i){
+		result+= (String.fromCharCode(array[i]));
+	}
+	return result;
+}
+
+function byteLength(str) {
+  // returns the byte length of an utf8 string
+  var s = str.length;
+  for (var i=str.length-1; i>=0; i--) {
+    var code = str.charCodeAt(i);
+    if (code > 0x7f && code <= 0x7ff) s++;
+    else if (code > 0x7ff && code <= 0xffff) s+=2;
+    if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+  }
+  return s;
 }

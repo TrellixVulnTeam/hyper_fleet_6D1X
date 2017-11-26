@@ -4,13 +4,9 @@ var Schema = mongoose.Schema;
 
 
 var SupplyContractSchema = new Schema({
-  name: {
+  state: {
     type: String,
-    required: 'contract#1'
-  },
-  status: {
-    type: String,
-    required: 'status_ok'
+    required: 'state_ok'
   }
 });
 
