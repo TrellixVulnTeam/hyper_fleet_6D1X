@@ -45,6 +45,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.initLedger(APIstub)
 	} else if function == "refreshCondition" {
 		return s.refreshCondition(APIstub, args)
+	} else if function == "resetConditionToNormal" {
+		return s.resetConditionToNormal(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -61,6 +63,24 @@ func (s *SmartContract) refreshCondition(APIstub shim.ChaincodeStubInterface, ar
 
 	json.Unmarshal(cargoAsBytes, &cargo)
 	cargo.State = "damaged"
+
+	cargoAsBytes, _ = json.Marshal(cargo)
+	APIstub.PutState(args[0], cargoAsBytes)
+
+	return shim.Success(cargoAsBytes)
+}
+
+func (s *SmartContract) resetConditionToNormal(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	cargoAsBytes, _ := APIstub.GetState(args[0])
+	cargo := Cargo{}
+
+	json.Unmarshal(cargoAsBytes, &cargo)
+	cargo.State = "ok"
 
 	cargoAsBytes, _ = json.Marshal(cargo)
 	APIstub.PutState(args[0], cargoAsBytes)

@@ -4,4 +4,7 @@ module.exports = function(app) {
 
   app.route('/supply_contract')
       .get(controller.show);
+
+  app.route('/reset_state_to_normal')
+      .get(controller.reset_to_normal);
 };

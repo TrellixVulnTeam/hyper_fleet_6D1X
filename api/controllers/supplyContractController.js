@@ -16,7 +16,18 @@ exports.show = function(req, res) {
     var last_element = contracts[contracts.length - 1];
     res.json(last_element);
   });
+};
 
+exports.reset_to_normal = function(req, res) {
+  var resetterInstance = require('../../resetter');
+  var response = resetterInstance.reset_cargo_state_to_normal();
 
+  SupplyContract.find({}, function(err, contracts) {
+    if (err) {
+      res.send(err);
+    }
 
+    var last_element = contracts[contracts.length - 1];
+    res.json(last_element);
+  });
 };
